@@ -273,9 +273,12 @@
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
-            display: inline-block;
+            display: inline-flex;  /* Changed from inline-block to inline-flex */
+            justify-content: center;  /* Center text horizontally */
+            align-items: center;      /* Center text vertically */
+            text-align: center;       /* Ensure text is centered */
         }
-        
+
         .btn-update:hover {
             background-color: #17954b;
             transform: translateY(-3px);
@@ -575,6 +578,9 @@
                 /* Make touch target larger */
                 min-height: 48px;
                 min-width: 80px;
+                display: inline-flex;         /* Ensure flex display is maintained */
+                justify-content: center;      /* Center text horizontally */
+                align-items: center;          /* Center text vertically */
             }
             
             .players-header {
@@ -649,6 +655,11 @@
             .container {
                 padding: 12px 10px;
                 border-width: 2px;
+            }
+            .btn-update {
+                padding: 10px 15px;
+                font-size: 1rem;
+                min-height: 42px;  /* Slightly smaller height for very small screens */
             }
             
             .header {
@@ -766,6 +777,7 @@
             
             .btn-update {
                 width: 100%;
+                padding: 8px 10px;
             }
         }
         
