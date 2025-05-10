@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monopoly - Host Game</title>
+    <style>
+        /* Variables */
+        :root {
+            --monopoly-red: #ED1B24;
+            --monopoly-green: #1FB25A;
+            --monopoly-blue: #0072BB;
+            --monopoly-yellow: #FEF200;
+            --monopoly-orange: #F7941D;
+            --monopoly-brown: #955436;
+            --monopoly-light-blue: #AAE0FA;
+            --monopoly-pink: #D93A96;
+            --board-color: #E8E8E0;
+            --money-green: #85BB65;
+        }
+        
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            background-color: var(--board-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        /* Monopoly Board Background Pattern */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+        
+        /* Container */
+        .container {
+            width: 100%;
+            height: 100vh;
+            background-color: white;
+            border: 5px solid black;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--monopoly-red);
+        }
+        
+        .logo-small {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-circle {
+            width: 50px;
+            height: 50px;
+            background-color: var(--monopoly-red);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--monopoly-red);
+            text-transform: uppercase;
+        }
+        
+        /* Game Code Display */
+        .game-code-container {
+            text-align: center;
+            margin: 20px 0 30px;
+            position: relative;
+        }
+        
+        .game-code-label {
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .game-code-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .game-code {
+            font-size: 4rem;
+            font-weight: bold;
+            letter-spacing: 15px;
+            color: var(--monopoly-blue);
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 3px solid var(--monopoly-blue);
+            border-radius: 15px;
+            display: inline-block;
+            position: relative;
+            min-width: 350px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .copy-btn {
+            position: relative;
+            margin-left: 15px;
+            background-color: var(--monopoly-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .copy-btn:hover {
+            background-color: #005d9e;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .copy-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .copy-tooltip {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        
+        .copy-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        
+        .copy-btn:hover .copy-tooltip {
+            opacity: 1;
+        }
+        
+        /* Host Options */
+        .host-options {
+            margin: 20px auto;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--monopoly-blue);
+            box-shadow: 0 0 5px rgba(0, 114, 187, 0.5);
+        }
+        
+        .btn-update {
+            background-color: var(--monopoly-green);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .btn-update:hover {
+            background-color: #17954b;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+        
+        /* Players List */
+        .players-section {
+            flex: 1;
+            margin-top: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .players-header {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #333;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--monopoly-red);
+            margin-bottom: 20px;
+        }
+        
+        .players-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+            transition: background-color 0.3s;
+        }
+        
+        .player-item:last-child {
+            border-bottom: none;
+        }
+        
+        .player-item:hover {
+            background-color: rgba(0, 114, 187, 0.1);
+        }
+        
+        .player-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .player-status {
+            font-size: 0.9rem;
+            color: var(--monopoly-green);
+            font-weight: bold;
+        }
+        
+        .player-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--monopoly-blue);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        
+        .btn-start, .btn-ready {
+            flex: 1;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-start {
+            background-color: var(--monopoly-red);
+        }
+        
+        .btn-ready {
+            background-color: var(--monopoly-blue);
+        }
+        
+        .btn-start:hover {
+            background-color: #c91018;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn-ready:hover {
+            background-color: #005d9e;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn-cancel {
+            background-color: #777;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #555;
+            transform: translateY(-3px);
+        }
+        
+        /* Decorative Elements */
+        .corner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+        }
+        
+        .top-left {
+            top: 0;
+            left: 0;
+            border-top: 16px solid var(--monopoly-red);
+            border-left: 16px solid var(--monopoly-red);
+            border-top-left-radius: 16px;
+        }
+        
+        .top-right {
+            top: 0;
+            right: 0;
+            border-top: 16px solid var(--monopoly-blue);
+            border-right: 16px solid var(--monopoly-blue);
+            border-top-right-radius: 16px;
+        }
+        
+        .bottom-left {
+            bottom: 0;
+            left: 0;
+            border-bottom: 16px solid var(--monopoly-yellow);
+            border-left: 16px solid var(--monopoly-yellow);
+            border-bottom-left-radius: 16px;
+        }
+        
+        .bottom-right {
+            bottom: 0;
+            right: 0;
+            border-bottom: 16px solid var(--monopoly-green);
+            border-right: 16px solid var(--monopoly-green);
+            border-bottom-right-radius: 16px;
+        }
+        
+        /* Dice Decoration */
+        .dice {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            border: 3px solid black;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: -1;
+        }
+        
+        .dice-1 {
+            top: 40px;
+            right: 60px;
+            transform: rotate(15deg);
+        }
+        
+        .dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: black;
+            border-radius: 50%;
+        }
+        
+        /* Dice 1 dots */
+        .dice-1 .dot:nth-child(1) {
+            top: 8px;
+            left: 8px;
+        }
+        
+        .dice-1 .dot:nth-child(2) {
+            top: 24px;
+            left: 24px;
+        }
+        
+        .dice-1 .dot:nth-child(3) {
+            bottom: 8px;
+            right: 8px;
+        }
+        
+        /* Responsive Styles - IMPROVED FOR MOBILE */
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+                height: 100%;
+                border-width: 3px;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 15px;
+                padding-bottom: 15px;
+            }
+            
+            .btn-cancel {
+                padding: 12px 25px;
+                font-size: 1.1rem;
+                width: 100%;
+            }
+            
+            .logo-small {
+                margin-bottom: 5px;
+            }
+            
+            .logo-circle {
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+            }
+            
+            .logo-text {
+                font-size: 1.5rem;
+            }
+            
+            .game-code-container {
+                margin: 15px 0 20px;
+            }
+            
+            .game-code {
+                font-size: 2.8rem;
+                letter-spacing: 8px;
+                min-width: 0;
+                width: 100%;
+                padding: 15px 10px;
+            }
+            
+            .game-code-wrapper {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .copy-btn {
+                width: 45px;
+                height: 45px;
+                margin-left: 10px;
+            }
+            
+            .host-options {
+                margin: 15px auto;
+            }
+            
+            .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .form-label {
+                font-size: 1.1rem;
+            }
+            
+            .form-control {
+                padding: 12px;
+                font-size: 1.1rem;
+            }
+            
+            .btn-update {
+                padding: 12px 20px;
+                font-size: 1rem;
+                /* Make touch target larger */
+                min-height: 48px;
+                min-width: 80px;
+            }
+            
+            .players-header {
+                font-size: 1.4rem;
+                margin-bottom: 15px;
+            }
+            
+            .players-list {
+                border-width: 1px;
+                padding: 0 5px;
+            }
+            
+            .player-item {
+                padding: 12px 10px;
+            }
+            
+            .player-name {
+                font-size: 1rem;
+                /* Prevent long names from breaking layout */
+                max-width: 150px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .player-status {
+                font-size: 0.8rem;
+            }
+            
+            .player-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+                margin-right: 10px;
+                flex-shrink: 0;
+            }
+            
+            .footer {
+                flex-direction: column;
+                gap: 15px;
+                margin-top: 20px;
+            }
+            
+            .btn-start, .btn-ready {
+                width: 100%;
+                padding: 15px 20px;
+                font-size: 1.2rem;
+                /* Make touch target larger */
+                min-height: 50px;
+            }
+            
+            /* Hide decorative elements on small screens for more space */
+            .corner {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .dice {
+                display: none;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .container {
+                padding: 12px 10px;
+                border-width: 2px;
+            }
+            
+            .header {
+                padding-bottom: 10px;
+                margin-bottom: 10px;
+                border-bottom-width: 2px;
+            }
+            
+            .btn-cancel {
+                padding: 10px 15px;
+                font-size: 1rem;
+            }
+            
+            .logo-circle {
+                width: 35px;
+                height: 35px;
+                font-size: 1.3rem;
+                margin-right: 10px;
+            }
+            
+            .logo-text {
+                font-size: 1.3rem;
+            }
+            
+            .game-code {
+                font-size: 2rem;
+                letter-spacing: 5px;
+                padding: 10px 5px;
+                border-width: 2px;
+                border-radius: 10px;
+            }
+            
+            .game-code-label {
+                font-size: 1rem;
+            }
+            
+            .copy-btn {
+                width: 38px;
+                height: 38px;
+                padding: 8px;
+            }
+            
+            .copy-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+            
+            .form-label {
+                font-size: 1rem;
+                margin-bottom: 5px;
+            }
+            
+            .form-control {
+                padding: 10px;
+                font-size: 1rem;
+                border-width: 1px;
+            }
+            
+            .players-header {
+                font-size: 1.2rem;
+                padding-bottom: 8px;
+                margin-bottom: 10px;
+            }
+            
+            .player-icon {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+                margin-right: 8px;
+            }
+            
+            .player-name {
+                font-size: 0.9rem;
+                max-width: 120px;
+            }
+            
+            .player-status {
+                font-size: 0.75rem;
+            }
+            
+            .btn-start, .btn-ready {
+                padding: 12px 15px;
+                font-size: 1.1rem;
+            }
+            
+            /* Further reduce decorative elements */
+            .corner {
+                width: 30px;
+                height: 30px;
+                border-width: 8px;
+            }
+        }
+        
+        /* Additional responsive fixes for very small screens */
+        @media screen and (max-width: 360px) {
+            .container {
+                padding: 10px 8px;
+            }
+            
+            .game-code {
+                font-size: 1.7rem;
+                letter-spacing: 3px;
+                padding: 8px 4px;
+            }
+            
+            .player-name {
+                max-width: 100px;
+            }
+            
+            /* Make form layout more compact */
+            .form-group div {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .btn-update {
+                width: 100%;
+            }
+        }
+        
+        /* Fix for iOS Safari 100vh issue */
+        @supports (-webkit-touch-callout: none) {
+            .container {
+                height: -webkit-fill-available;
+            }
+        }
+        
+        /* Improve touch targets for better mobile experience */
+        @media (pointer: coarse) {
+            .btn-start, .btn-ready, .btn-cancel, .btn-update, .copy-btn {
+                cursor: pointer;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            .player-item {
+                min-height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Decorative Corners -->
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
+        
+        <!-- Dice Decoration -->
+        <div class="dice dice-1">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-small">
+                <div class="logo-circle">M</div>
+                <div class="logo-text">Monopoly</div>
+            </div>
+            <button class="btn-cancel" onclick="window.location.href='/'">Back to Menu</button>
+        </div>
+        
+        <!-- Game Code Display -->
+        <div class="game-code-container">
+            <div class="game-code-wrapper">
+                <div class="game-code" id="gameCode">847291</div>
+                <button class="copy-btn" onclick="copyGameCode()">
+                    <span class="copy-tooltip">Copy code</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Host Options -->
+        <div class="host-options">
+            <div class="form-group">
+                <label for="hostName" class="form-label" id="yourNamePlaceholder">Your Name ()</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="nameInput" class="form-control" placeholder="Enter your name" value="">
+                    <button class="btn-update" onclick="updateNameButton()">Update</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Players List -->
+        <div class="players-section">
+            <h2 class="players-header">Players (0)</h2>
+            <div class="players-list"></div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <button class="btn-ready" onclick="readyUpButton()">Ready Up</button>
+            <button class="btn-start">Start Game</button>
+        </div>
+    </div>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+
+    <script>
+        function updateNameButton() {
+            var name = document.getElementById("nameInput").value
+            socket.emit("name-changed",{
+                roomCode: roomCode,
+                newName: name
+            })
+        }
+
+        function readyUpButton() {
+            var playerObejct = document.getElementById(socket.id)
+            var playerStatus = playerObejct.querySelector(".player-status").innerText
+            socket.emit("readyStatus-update",{
+                playerStatus: playerStatus,
+                roomCode: roomCode
+            })
+        }
+
+
+        function updateUrlParam(paramName, paramValue) {
+            const url = new URL(window.location.href);
+            url.searchParams.set(paramName, paramValue); 
+            window.history.pushState({}, '', url);
+            }
+
+        function updateSocketId(newSocketId) {
+            updateUrlParam('socketId', newSocketId);
+            }
+
+        function copyGameCode() {
+            const gameCode = document.getElementById('gameCode').innerText
+            navigator.clipboard.writeText(gameCode)
+            alert(`Copied ${gameCode} to clipboard`)
+        }
+
+        function addPlayer(playerName, playerId, playerStatus = "Not Ready") {
+            const playersList = document.querySelector(".players-list")
+            
+            const currentPlayers = playersList.querySelectorAll(".player-item")
+            const playerNumber = currentPlayers.length + 1
+            
+            const playerItem = document.createElement("div")
+            playerItem.className = "player-item"
+
+            playerItem.id = playerId
+            playerItem.innerHTML = `
+                <div style="display: flex; align-items: center;">
+                    <div class="player-icon">${playerNumber}</div>
+                    <div class="player-name">${playerName}</div>
+                </div>
+                <div class="player-status">${playerStatus}</div>
+            `
+            
+            // Add the new player to the list
+            playersList.appendChild(playerItem)
+            
+            // Update the player count in the header
+            const playersHeader = document.querySelector(".players-header")
+            playersHeader.textContent = `Players (${playerNumber})`
+        }
+        
+        const queryString = window.location.search
+        const urlParams = new URLSearchParams(queryString)
+        const oldId = urlParams.get("socketId")
+        
+        const roomCode = urlParams.get('roomCode')
+        var participants = urlParams.get('participants')
+        
+        document.querySelector('.game-code').textContent = roomCode
+
+        const socket = io()
+
+        socket.on("connect",() => {
+            updateSocketId(socket.id)
+        })
+
+        updateSocketId(socket.id)
+        console.log("socektid: ",socket.id)
+
+        socket.emit("reconnect",{
+            oldId:oldId,
+            roomCode:roomCode
+        })
+
+        socket.on("participants-update",function(data) {
+            var playersList = document.querySelector('.players-list');
+            playersList.replaceChildren();
+            var participants = data.participants 
+            console.log(participants)
+
+            for (let key in participants) {
+                var name = participants[key].name
+
+                if (participants[key].id === socket.id) {
+                    console.log(`key: ${key} keyId: ${participants[key].id} YourId: ${socket.id} keyName: ${name}`)
+                    const yourNamePlaceholder = document.getElementById("yourNamePlaceholder")
+                    yourNamePlaceholder.textContent = `Your Name (${name})`
+
+                    const nameInput = document.getElementById('nameInput')
+                    nameInput.value = name
+
+                    name = `${name} (You)`
+                }
+                addPlayer(playername = name, playerId = participants[key].id, playerStatus = participants[key].ready)
+                
+            }
+        })
+
+        socket.on("readyStatus-updated",function(data) {
+            var playerObejct = document.getElementById(data.playerId)
+            var playerStatus = playerObejct.querySelector(".player-status")
+            console.log(playerStatus)
+            playerStatus.innerText = data.newStatus
+        })
+
+        socket.on("room-404",function(){
+            alert("Room 404 - Not found error")
+            window.location.href = "/"
+        })
+
+
+    </script>
+</body>
+</html>

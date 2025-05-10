@@ -1,0 +1,11 @@
+//server emitions
+update-name
+participants-update
+
+
+//server recivers
+
+//socekt setup
+socket works by creating a room with socket ids, names and isHost. 
+When the user changes a page it will emit "reconnect" and the old id, new id and room code will be passed as an object. 
+This then updates the room with the new id and emits "participants-update" which will send the new list containing the new connection id.

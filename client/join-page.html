@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monopoly - Join Game</title>
+    <style>
+        /* Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Kabel:wght@400;700&display=swap');
+        
+        /* Variables */
+        :root {
+            --monopoly-red: #ED1B24;
+            --monopoly-green: #1FB25A;
+            --monopoly-blue: #0072BB;
+            --monopoly-yellow: #FEF200;
+            --monopoly-orange: #F7941D;
+            --monopoly-brown: #955436;
+            --monopoly-light-blue: #AAE0FA;
+            --monopoly-pink: #D93A96;
+            --board-color: #E8E8E0;
+            --money-green: #85BB65;
+        }
+        
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            background-color: var(--board-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        /* Monopoly Board Background Pattern */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+        
+        /* Container */
+        .container {
+            width: 100%;
+            height: 100vh;
+            background-color: white;
+            border: 5px solid black;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Title */
+        .title {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+        
+        .title h1 {
+            font-size: 4rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--monopoly-blue);
+            text-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+            font-weight: bold;
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            color: #333;
+            margin-top: 10px;
+        }
+        
+        /* Logo */
+        .logo {
+            width: 120px;
+            height: 120px;
+            background-color: var(--monopoly-blue);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 4.5rem;
+            font-weight: bold;
+            margin: 0 auto 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        /* Form Container */
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        /* Form Elements */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            align-items: center;
+        }
+        
+        .form-group label {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #333;
+            text-transform: uppercase;
+        }
+        
+        .form-control {
+            padding: 18px 20px;
+            font-size: 1.5rem;
+            border: 3px solid #333;
+            border-radius: 8px;
+            background-color: #fff;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--monopoly-blue);
+            box-shadow: 0 4px 12px rgba(0,114,187,0.3);
+        }
+        
+        /* Game Code Input */
+        .code-input {
+            font-size: 2.5rem;
+            text-align: center;
+            letter-spacing: 12px;
+            font-weight: bold;
+            padding: 24px 20px;
+        }
+        
+        /* Button Styling */
+        .btn {
+            padding: 18px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 70px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .btn::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-color: rgba(0,0,0,0.2);
+        }
+        
+        .btn-join {
+            background-color: var(--monopoly-green);
+            color: white;
+        }
+        
+        .btn-back {
+            background-color: var(--monopoly-red);
+            color: white;
+            margin-top: 30px;
+            height: 60px;
+            font-size: 1.2rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* Decorative Elements */
+        .corner {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+        }
+        
+        .top-left {
+            top: 0;
+            left: 0;
+            border-top: 16px solid var(--monopoly-red);
+            border-left: 16px solid var(--monopoly-red);
+            border-top-left-radius: 16px;
+        }
+        
+        .top-right {
+            top: 0;
+            right: 0;
+            border-top: 16px solid var(--monopoly-blue);
+            border-right: 16px solid var(--monopoly-blue);
+            border-top-right-radius: 16px;
+        }
+        
+        .bottom-left {
+            bottom: 0;
+            left: 0;
+            border-bottom: 16px solid var(--monopoly-yellow);
+            border-left: 16px solid var(--monopoly-yellow);
+            border-bottom-left-radius: 16px;
+        }
+        
+        .bottom-right {
+            bottom: 0;
+            right: 0;
+            border-bottom: 16px solid var(--monopoly-green);
+            border-right: 16px solid var(--monopoly-green);
+            border-bottom-right-radius: 16px;
+        }
+        
+        /* Dice Decoration */
+        .dice {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            border: 3px solid black;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .dice-1 {
+            top: 40px;
+            right: 60px;
+            transform: rotate(15deg);
+        }
+        
+        .dice-2 {
+            bottom: 40px;
+            left: 60px;
+            transform: rotate(-10deg);
+        }
+        
+        .dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: black;
+            border-radius: 50%;
+        }
+        
+        /* Dice 1 dots */
+        .dice-1 .dot:nth-child(1) {
+            top: 8px;
+            left: 8px;
+        }
+        
+        .dice-1 .dot:nth-child(2) {
+            top: 24px;
+            left: 24px;
+        }
+        
+        .dice-1 .dot:nth-child(3) {
+            bottom: 8px;
+            right: 8px;
+        }
+        
+        /* Dice 2 dots */
+        .dice-2 .dot:nth-child(1) {
+            top: 8px;
+            left: 8px;
+        }
+        
+        .dice-2 .dot:nth-child(2) {
+            top: 8px;
+            right: 8px;
+        }
+        
+        .dice-2 .dot:nth-child(3) {
+            top: 24px;
+            left: 24px;
+        }
+        
+        .dice-2 .dot:nth-child(4) {
+            bottom: 8px;
+            left: 8px;
+        }
+        
+        .dice-2 .dot:nth-child(5) {
+            bottom: 8px;
+            right: 8px;
+        }
+        
+        /* Responsive Styles */
+        @media screen and (max-width: 768px) {
+            .title h1 {
+                font-size: 3rem;
+            }
+            
+            .logo {
+                width: 100px;
+                height: 100px;
+                font-size: 3.5rem;
+            }
+            
+            .form-control {
+                padding: 15px;
+                font-size: 1.2rem;
+            }
+            
+            .code-input {
+                font-size: 2rem;
+                letter-spacing: 8px;
+                padding: 20px;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .title h1 {
+                font-size: 2.5rem;
+            }
+            
+            .logo {
+                width: 80px;
+                height: 80px;
+                font-size: 3rem;
+            }
+            
+            .form-control {
+                padding: 12px;
+                font-size: 1.1rem;
+            }
+            
+            .code-input {
+                font-size: 1.8rem;
+                letter-spacing: 6px;
+                padding: 18px;
+            }
+            
+            .btn {
+                padding: 15px 20px;
+                font-size: 1.2rem;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Decorative Corners -->
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
+        
+        <!-- Dice Decoration -->
+        <div class="dice dice-1">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <div class="dice dice-2">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        
+        <!-- Title and Logo -->
+        <div class="title">
+            <div class="logo">M</div>
+            <h1>Join Game</h1>
+        </div>
+        
+        <!-- Form -->
+        <div class="form-container">
+            <div class="form-group">
+                <label for="game-code">Game Code</label>
+                <input type="text" id="game-code" class="form-control code-input" placeholder="000000" maxlength="6" minlength="6" 
+                       inputmode="numeric" pattern="[0-9]*" required
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 6)">
+            </div>
+            
+            <button class="btn btn-join" onclick="joinButtonClick()">
+                Join Game
+            </button>
+            
+            <button class="btn btn-back" onclick="window.location.href='/'">
+                Back to Menu
+            </button>
+        </div>
+    </div>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script>
+        function joinButtonClick() {
+            const socket = io()
+            const roomCode = document.getElementById("game-code").value
+
+            socket.emit("join-room",{
+                code:roomCode
+            })
+
+            socket.on("room-joined",function(data) {
+                var participants = data.participants
+                window.location.href = `/lobby-page?roomCode=${roomCode}&participants=${participants}&socketId=${socket.id}`
+            })
+
+            socket.on("room-full",function(data) {
+                const codeInput = document.getElementById("game-code")
+                codeInput.value = ""
+
+                alert(`Requested room is full`)
+            })
+        }
+    </script>
+</body>
+</html>
