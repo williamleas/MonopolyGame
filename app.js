@@ -187,14 +187,15 @@ io.on("connection", function(socket){
         var roomCode = data.code;
 
         if (roomCode in rooms) {
-            rooms[roomCode].guests.push({id: socket.id,ready:"Not Ready",name:`Player ${rooms[roomCode].guests.length + 1}`})
+            
             participants = formatParticipants(rooms[roomCode])
-            console.log(rooms[roomCode].guests[0])
-
-            if (participants.length > 4) {
+            if (participants.length >= 4) {
                 socket.emit("room-full");
 
             } else {
+                rooms[roomCode].guests.push({id: socket.id,ready:"Not Ready",name:`Player ${rooms[roomCode].guests.length + 1}`})
+                
+                console.log(rooms[roomCode].guests[0])
 
                 io.to(roomCode).emit("participants-update",{
                     participants:participants
@@ -208,7 +209,9 @@ io.on("connection", function(socket){
                 });
             };
      
-        };
+        } else {
+            socket.emit("room-404")
+        }
 
     });
 
@@ -258,12 +261,15 @@ io.on("connection", function(socket){
         if (rooms[data.roomCode] === undefined) {
             socket.emit("room-404")
         }else{
-
+            var oldName = ""
             if (socket.id == rooms[data.roomCode].host.id) {
+                oldName = rooms[data.roomCode].host.name
                 rooms[data.roomCode].host.name = data.newName
+
             } else {
                 for (let key in rooms[data.roomCode].guests) {
                     if (rooms[data.roomCode].guests[key].id == socket.id) {
+                        oldName = rooms[data.roomCode].guests[key].name
                         rooms[data.roomCode].guests[key].name = data.newName
                         break
                     } 
@@ -271,10 +277,12 @@ io.on("connection", function(socket){
             }
 
             participants = formatParticipants(rooms[data.roomCode])
-
-            io.to(data.roomCode).emit("participants-update",{
-                participants:participants
-            })
+            if (oldName != data.newName) {
+                io.to(data.roomCode).emit("participants-update",{
+                    participants:participants
+                })
+            }
+            
         }
     })
 

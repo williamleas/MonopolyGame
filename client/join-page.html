@@ -20,6 +20,7 @@
             --monopoly-pink: #D93A96;
             --board-color: #E8E8E0;
             --money-green: #85BB65;
+            --notification-green: rgba(31, 178, 90, 0.15);
         }
         
         /* Global Styles */
@@ -72,6 +73,31 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+        }
+
+        .notification-dropdown {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background-color: var(--notification-green);
+            color: #333333;
+            padding: 12px 25px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.377);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            border-bottom: 2px solid var(--monopoly-green);
+            border-radius: 10px;
+            max-width: 90%;
+            width: auto;
+            white-space: nowrap;
+        }
+        
+        .notification-dropdown.show {
+            transform: translateX(-50%) translateY(0);
         }
         
         /* Title */
@@ -392,7 +418,9 @@
     </style>
 </head>
 <body>
+    <div class="notification-dropdown" id="notificationDropdown"></div>
     <div class="container">
+        
         <!-- Decorative Corners -->
         <div class="corner top-left"></div>
         <div class="corner top-right"></div>
@@ -439,6 +467,66 @@
     </div>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
+        const notificationQueue = [];
+        let isNotificationShowing = false;
+
+        function showNotification(message, isError = false, timeout = 3000) {
+            // Add notification to the queue
+            notificationQueue.push({
+                message: message,
+                isError: isError,
+                timeout: timeout
+            });
+            
+            // If no notification is currently showing, process the queue
+            if (!isNotificationShowing) {
+                processNotificationQueue();
+            }
+        }
+        
+        function processNotificationQueue() {
+            // If queue is empty or notification is already showing, exit
+            if (notificationQueue.length === 0 || isNotificationShowing) {
+                return;
+            }
+            
+            // Mark as showing
+            isNotificationShowing = true;
+            
+            // Get the next notification from the queue
+            const notification = notificationQueue.shift();
+            const notificationElement = document.getElementById('notificationDropdown');
+            
+            // Set notification content and styling
+            notificationElement.textContent = notification.message;
+            
+            if (notification.isError) {
+                notificationElement.style.backgroundColor = 'rgba(237, 27, 36, 0.6)';
+                notificationElement.style.borderBottom = '2px solid var(--monopoly-red)';
+            } else {
+                notificationElement.style.backgroundColor = 'var(--notification-green)';
+                notificationElement.style.borderBottom = '2px solid var(--monopoly-green)';
+            }
+            
+            // Force layout recalculation
+            notificationElement.offsetWidth;
+            
+            // Show notification
+            notificationElement.classList.add('show');
+            
+            // Set timeout to hide notification
+            if (notification.timeout > 0) {
+                setTimeout(() => {
+                    notificationElement.classList.remove('show');
+                    
+                    // After transition completes, check for more notifications
+                    setTimeout(() => {
+                        isNotificationShowing = false;
+                        processNotificationQueue();
+                    }, 300); // Match the transition duration in CSS
+                }, notification.timeout);
+            }
+        }
         function joinButtonClick() {
             const socket = io()
             const roomCode = document.getElementById("game-code").value
@@ -456,7 +544,16 @@
                 const codeInput = document.getElementById("game-code")
                 codeInput.value = ""
 
-                alert(`Requested room is full`)
+                showNotification(`Requested room is full`,isError=true,timeout=4000)
+                socket.disconnect()
+            })
+
+            socket.on("room-404",function(data) {
+                const codeInput = document.getElementById("game-code")
+                codeInput.value = ""
+
+                showNotification(`Room not found`,isError=true,timeout=5000)
+                socket.disconnect()
             })
         }
     </script>

@@ -17,6 +17,7 @@
             --monopoly-pink: #D93A96;
             --board-color: #E8E8E0;
             --money-green: #85BB65;
+            --notification-green: rgba(31, 178, 90, 0.15);
         }
         
         /* Global Styles */
@@ -39,6 +40,32 @@
             justify-content: center;
             align-items: center;
             position: relative;
+        }
+        
+        /* Notification Dropdown */
+        .notification-dropdown {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background-color: var(--notification-green);
+            color: #333;
+            padding: 12px 25px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            border-bottom: 2px solid var(--monopoly-green);
+            border-radius: 10px;
+            max-width: 90%;
+            width: auto;
+            white-space: nowrap;
+        }
+        
+        .notification-dropdown.show {
+            transform: translateX(-50%) translateY(0);
         }
         
         /* Monopoly Board Background Pattern */
@@ -608,6 +635,14 @@
             .dice {
                 display: none;
             }
+            
+            /* Adjust notification for mobile */
+            .notification-dropdown {
+                padding: 10px 15px;
+                font-size: 0.95rem;
+                top: 10px;
+                max-width: 85%;
+            }
         }
         
         @media screen and (max-width: 480px) {
@@ -755,6 +790,9 @@
     </style>
 </head>
 <body>
+    <!-- Notification Dropdown -->
+    <div class="notification-dropdown" id="notificationDropdown"></div>
+
     <div class="container">
         <!-- Decorative Corners -->
         <div class="corner top-left"></div>
@@ -817,12 +855,79 @@
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
 
     <script>
+        // Create a notification queue system
+        const notificationQueue = [];
+        let isNotificationShowing = false;
+
+        function showNotification(message, isError = false, timeout = 3000) {
+            // Add notification to the queue
+            notificationQueue.push({
+                message: message,
+                isError: isError,
+                timeout: timeout
+            });
+            
+            // If no notification is currently showing, process the queue
+            if (!isNotificationShowing) {
+                processNotificationQueue();
+            }
+        }
+        
+        function processNotificationQueue() {
+            // If queue is empty or notification is already showing, exit
+            if (notificationQueue.length === 0 || isNotificationShowing) {
+                return;
+            }
+            
+            // Mark as showing
+            isNotificationShowing = true;
+            
+            // Get the next notification from the queue
+            const notification = notificationQueue.shift();
+            const notificationElement = document.getElementById('notificationDropdown');
+            
+            // Set notification content and styling
+            notificationElement.textContent = notification.message;
+            
+            if (notification.isError) {
+                notificationElement.style.backgroundColor = 'rgba(237, 27, 36, 0.15)';
+                notificationElement.style.borderBottom = '2px solid var(--monopoly-red)';
+            } else {
+                notificationElement.style.backgroundColor = 'var(--notification-green)';
+                notificationElement.style.borderBottom = '2px solid var(--monopoly-green)';
+            }
+            
+            // Force layout recalculation
+            notificationElement.offsetWidth;
+            
+            // Show notification
+            notificationElement.classList.add('show');
+            
+            // Set timeout to hide notification
+            if (notification.timeout > 0) {
+                setTimeout(() => {
+                    notificationElement.classList.remove('show');
+                    
+                    // After transition completes, check for more notifications
+                    setTimeout(() => {
+                        isNotificationShowing = false;
+                        processNotificationQueue();
+                    }, 300); // Match the transition duration in CSS
+                }, notification.timeout);
+            }
+        }
+
         function updateNameButton() {
             var name = document.getElementById("nameInput").value
-            socket.emit("name-changed",{
-                roomCode: roomCode,
-                newName: name
-            })
+            if (name != "") {
+                socket.emit("name-changed",{
+                    roomCode: roomCode,
+                    newName: name
+                })
+            } else {
+                showNotification("Name must be atleast 1 charactor long",isError=true)
+            }
+            
         }
 
         function readyUpButton() {
@@ -848,7 +953,7 @@
         function copyGameCode() {
             const gameCode = document.getElementById('gameCode').innerText
             navigator.clipboard.writeText(gameCode)
-            alert(`Copied ${gameCode} to clipboard`)
+            showNotification("Game Code Copied to clipboard!")
         }
 
         function addPlayer(playerName, playerId, playerStatus = "Not Ready") {
@@ -927,13 +1032,18 @@
         socket.on("readyStatus-updated",function(data) {
             var playerObejct = document.getElementById(data.playerId)
             var playerStatus = playerObejct.querySelector(".player-status")
+            var playerName = playerObejct.querySelector(".player-name").innerText
             console.log(playerStatus)
             playerStatus.innerText = data.newStatus
+            showNotification(`${playerName} changed status to ${data.newStatus}`,isError=false,timeout=2000)
         })
 
         socket.on("room-404",function(){
-            alert("Room 404 - Not found error")
-            window.location.href = "/"
+            showNotification("Room 404 - Not found error",isError=true,timeout=0)
+        })
+
+        socket.on("disconnect",function(){
+            showNotification("Room 404 - Not found error",isError=true,timeout=0)
         })
 
 
